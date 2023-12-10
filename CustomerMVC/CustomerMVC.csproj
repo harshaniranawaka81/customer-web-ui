@@ -6,4 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CustomerMvc.Business\CustomerMvc.Business.csproj" />
+    <ProjectReference Include="..\CustomerMvc.Domain\CustomerMvc.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,7 +1,14 @@
+using CustomerMvc.Business.Middleware;
+using CustomerMvc.Business.Services;
+using CustomerMvc.Domain.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<ICustomerHttpClientService, CustomerHttpClientService>();
 
 var app = builder.Build();
 
@@ -12,6 +19,8 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseExceptionMiddleware();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
