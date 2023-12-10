@@ -10,7 +10,7 @@ namespace CustomerMvc.Domain.Interfaces
 {
     public interface ICustomerHttpClientService
     {
-        Task<KeyValuePair<HttpStatusCode, List<CustomerModel>>> GetCustomersAsync();
+        Task<KeyValuePair<HttpStatusCode, List<CustomerModel>?>> GetCustomersAsync();
 
         Task<KeyValuePair<HttpStatusCode, CustomerModel?>> GetCustomer(int? id);
 

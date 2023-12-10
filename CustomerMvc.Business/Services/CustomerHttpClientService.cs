@@ -35,13 +35,13 @@ namespace CustomerMvc.Business.Services
             return endpoint;
         }
 
-        public async Task<KeyValuePair<HttpStatusCode, List<CustomerModel>>> GetCustomersAsync()
+        public async Task<KeyValuePair<HttpStatusCode, List<CustomerModel>?>> GetCustomersAsync()
         {
             var httpClient = _httpClientFactory.CreateClient();
 
-            var httpResponseMessage = await httpClient.GetAsync(GetCustomerApiEndpoint());      
+            var httpResponseMessage = await httpClient.GetAsync(GetCustomerApiEndpoint());
 
-            var customers = new List<CustomerModel>();
+            List<CustomerModel>? customers = null;
 
             if (httpResponseMessage.IsSuccessStatusCode)
             {
@@ -49,7 +49,7 @@ namespace CustomerMvc.Business.Services
                 customers = JsonConvert.DeserializeObject<List<CustomerModel>>(content);
             }
 
-            return new KeyValuePair<HttpStatusCode, List<CustomerModel>>(httpResponseMessage.StatusCode, customers);
+            return new KeyValuePair<HttpStatusCode, List<CustomerModel>?>(httpResponseMessage.StatusCode, customers);
         }
 
         public async Task<KeyValuePair<HttpStatusCode, CustomerModel?>> GetCustomer(int? id)
