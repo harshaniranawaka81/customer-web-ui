@@ -25,37 +25,35 @@ namespace CustomerMvc.Controllers
         {
             var result = await _customerService.GetCustomersAsync();
 
-            return result.Key switch
+            if(result != null && result.Count > 0)
             {
-                HttpStatusCode.OK => View(result.Value),
-                HttpStatusCode.NoContent => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.NoContent.ToString(), Message = "There are no customers to display." }),
-                HttpStatusCode.BadRequest => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.BadRequest.ToString(), Message = "The request is invalid. Please check your data." }),
-                _ => View("Error",
-                        new ErrorViewModel { StatusCode = HttpStatusCode.InternalServerError.ToString(), Message = "Internal Server Error!" })
-            };
+                return View(result);
+            }
+            else
+            {
+                return View("Notification",
+                        new NotificationModel { StatusCode = HttpStatusCode.NoContent.ToString(), Message = "There are no customers to display." });
+            }
         }
 
         private async Task<IActionResult> GetCustomer(int? id)
         {
             if (id == null)
             {
-                return View("Notification", new NotificationModel { StatusCode = HttpStatusCode.NotFound.ToString(), Message = "No customers found." });
+                return View("Notification", new NotificationModel { StatusCode = HttpStatusCode.NotFound.ToString(), Message = "No matching customer found." });
             }
 
             var result = await _customerService.GetCustomer(id);
 
-            return result.Key switch
+            if (result != null)
             {
-                HttpStatusCode.OK => View(result.Value),
-                HttpStatusCode.NotFound => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.NotFound.ToString(), Message = "No customers found." }),
-                HttpStatusCode.BadRequest => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.BadRequest.ToString(), Message = "The request is invalid. Please check your data." }),
-                _ => View("Error",
-                        new ErrorViewModel { StatusCode = HttpStatusCode.InternalServerError.ToString(), Message = "Internal Server Error!" })
-            };
+                return View(result);
+            }
+            else
+            {
+                return View("Notification",
+                        new NotificationModel { StatusCode = HttpStatusCode.NotFound.ToString(), Message = "No matching customer found." });
+            }
         }
 
         // GET: Customer/Details/5
@@ -84,16 +82,15 @@ namespace CustomerMvc.Controllers
 
             var result = await _customerService.SaveCustomer(customerModel);
 
-            return result.Key switch
+            if (result != null)
             {
-                HttpStatusCode.Created => RedirectToAction(nameof(Index)),
-                HttpStatusCode.NoContent => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.NoContent.ToString(), Message = "No customers found." }),
-                HttpStatusCode.BadRequest => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.BadRequest.ToString(), Message = "The request is invalid. Please check your data." }),
-                _ => View("Error",
-                        new ErrorViewModel { StatusCode = HttpStatusCode.InternalServerError.ToString(), Message = "Internal Server Error!" })
-            };
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                return View("Notification",
+                        new NotificationModel { StatusCode = HttpStatusCode.NoContent.ToString(), Message = "Customer was not added." });
+            }        
         }
 
         // GET: Customer/Edit/5
@@ -114,18 +111,17 @@ namespace CustomerMvc.Controllers
                 return View(customerModel);
             }
 
-            var result = await _customerService.UpdateCustomer(id, customerModel);
+            var IsUpdated = await _customerService.UpdateCustomer(id, customerModel);
 
-            return result.Key switch
+            if (IsUpdated)
             {
-                HttpStatusCode.OK => RedirectToAction(nameof(Index)),
-                HttpStatusCode.NoContent => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.NoContent.ToString(), Message = "No customers found." }),
-                HttpStatusCode.BadRequest => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.BadRequest.ToString(), Message = "The request is invalid. Please check your data." }),
-                _ => View("Error",
-                        new ErrorViewModel { StatusCode = HttpStatusCode.InternalServerError.ToString(), Message = "Internal Server Error!" })
-            };
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                return View("Notification",
+                        new NotificationModel { StatusCode = HttpStatusCode.NoContent.ToString(), Message = "No matching customer found to edit." });
+            }
         }
 
         // GET: Customer/Delete/5
@@ -139,18 +135,17 @@ namespace CustomerMvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var result = await _customerService.DeleteCustomer(id);
+            var isDeleted = await _customerService.DeleteCustomer(id);
 
-            return result.Key switch
+            if (isDeleted)
             {
-                HttpStatusCode.NoContent => RedirectToAction(nameof(Index)),
-                HttpStatusCode.NotFound => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.NotFound.ToString(), Message = "No customers found." }),
-                HttpStatusCode.BadRequest => View("Notification",
-                        new NotificationModel { StatusCode = HttpStatusCode.BadRequest.ToString(), Message = "The request is invalid. Please check your data." }),
-                _ => View("Error",
-                        new ErrorViewModel { StatusCode = HttpStatusCode.InternalServerError.ToString(), Message = "Internal Server Error!" })
-            };
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                return View("Notification",
+                        new NotificationModel { StatusCode = HttpStatusCode.NotFound.ToString(), Message = "No matching customer found to delete." });
+            }       
         }
 
     }

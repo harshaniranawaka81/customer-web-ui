@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using CustomerMvc.Domain.Interfaces;
 using System.Net.Http.Json;
+using CustomerMvc.Domain.Entities;
+using AutoMapper;
 
 namespace CustomerMvc.Business.Services
 {
@@ -15,11 +17,13 @@ namespace CustomerMvc.Business.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _config;
+        private readonly IMapper _autoMapper;
         private static readonly string customerApiEndpoint = "CustomerApi:BaseUrl";
 
-        public CustomerHttpClientService(IHttpClientFactory httpClientFactory, IConfiguration config)
+        public CustomerHttpClientService(IHttpClientFactory httpClientFactory, IMapper autoMapper, IConfiguration config)
         {
             _httpClientFactory = httpClientFactory;
+            _autoMapper = autoMapper;
             _config = config;
         }
 
@@ -35,28 +39,33 @@ namespace CustomerMvc.Business.Services
             return endpoint;
         }
 
-        public async Task<KeyValuePair<HttpStatusCode, List<CustomerModel>?>> GetCustomersAsync()
+        public async Task<List<CustomerModel>?> GetCustomersAsync()
         {
             var httpClient = _httpClientFactory.CreateClient();
 
             var httpResponseMessage = await httpClient.GetAsync(GetCustomerApiEndpoint());
 
-            List<CustomerModel>? customers = null;
+            List<CustomerModel>? customerModels = null;
 
             if (httpResponseMessage.IsSuccessStatusCode)
             {
                 var content = await httpResponseMessage.Content.ReadAsStringAsync();
-                customers = JsonConvert.DeserializeObject<List<CustomerModel>>(content);
+                List<Customer>? customers = JsonConvert.DeserializeObject<List<Customer>>(content);
+
+                if (customers != null && customers.Count > 0)
+                {
+                    customerModels = _autoMapper.Map<List<Customer>?, List<CustomerModel>?>(customers);
+                }
             }
 
-            return new KeyValuePair<HttpStatusCode, List<CustomerModel>?>(httpResponseMessage.StatusCode, customers);
+            return customerModels;
         }
 
-        public async Task<KeyValuePair<HttpStatusCode, CustomerModel?>> GetCustomer(int? id)
+        public async Task<CustomerModel?> GetCustomer(int? id)
         {
             if (id == 0)
             {
-                return new KeyValuePair<HttpStatusCode, CustomerModel?>(HttpStatusCode.BadRequest, null);
+                return null;
             }
 
             var httpClient = _httpClientFactory.CreateClient();
@@ -65,38 +74,44 @@ namespace CustomerMvc.Business.Services
             url += $"/{id}";
             var httpResponseMessage = await httpClient.GetAsync(url);
 
-            CustomerModel? customer = null;
+            CustomerModel? customerModel = null;
 
             if (httpResponseMessage.IsSuccessStatusCode)
             {
                 var content = await httpResponseMessage.Content.ReadAsStringAsync();
-                customer = JsonConvert.DeserializeObject<CustomerModel>(content);
+                Customer? customer = JsonConvert.DeserializeObject<Customer>(content);
+
+                if (customer != null)
+                    customerModel = _autoMapper.Map<Customer?, CustomerModel?>(customer);
             }           
 
-            return new KeyValuePair<HttpStatusCode, CustomerModel?>(httpResponseMessage.StatusCode, customer);
+            return customerModel;
         }
 
-        public async Task<KeyValuePair<HttpStatusCode, CustomerModel?>> SaveCustomer(CustomerModel customer)
+        public async Task<CustomerModel?> SaveCustomer(CustomerModel customerModel)
         {
             var httpClient = _httpClientFactory.CreateClient();
 
-            string jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(customer);
+            string jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(customerModel);
             var postContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
             HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(GetCustomerApiEndpoint(), postContent);
 
-            CustomerModel? createdCustomer = null;
+            CustomerModel? createdCustomerModel = null;
 
             if (httpResponseMessage.IsSuccessStatusCode)
             {
                 var content = await httpResponseMessage.Content.ReadAsStringAsync();
-                createdCustomer = JsonConvert.DeserializeObject<CustomerModel?>(content);               
+                Customer? customer = JsonConvert.DeserializeObject<Customer?>(content);
+
+                if(customer != null) 
+                    createdCustomerModel = _autoMapper.Map<Customer?, CustomerModel?>(customer);
             }
 
-            return new KeyValuePair<HttpStatusCode, CustomerModel?>(httpResponseMessage.StatusCode, createdCustomer);
+            return createdCustomerModel;
         }
 
-        public async Task<KeyValuePair<HttpStatusCode, bool>> UpdateCustomer(int id, CustomerModel customer)
+        public async Task<bool> UpdateCustomer(int id, CustomerModel customer)
         {
             var httpClient = _httpClientFactory.CreateClient();
 
@@ -116,14 +131,14 @@ namespace CustomerMvc.Business.Services
                 isUpdated = JsonConvert.DeserializeObject<bool>(content);
             }
 
-            return new KeyValuePair<HttpStatusCode, bool>(httpResponseMessage.StatusCode, isUpdated);
+            return isUpdated;
         }
 
-        public async Task<KeyValuePair<HttpStatusCode, bool>> DeleteCustomer(int id)
+        public async Task<bool> DeleteCustomer(int id)
         {
             if (id == 0)
             {
-                return new KeyValuePair<HttpStatusCode, bool>(HttpStatusCode.BadRequest, false);
+                return false;
             }
 
             var httpClient = _httpClientFactory.CreateClient();
@@ -133,9 +148,9 @@ namespace CustomerMvc.Business.Services
             var httpResponseMessage = await httpClient.DeleteAsync(url);
 
             if (httpResponseMessage.IsSuccessStatusCode)
-                return new KeyValuePair<HttpStatusCode, bool>(httpResponseMessage.StatusCode, true);
+                return true;
             else
-                return new KeyValuePair<HttpStatusCode, bool>(httpResponseMessage.StatusCode, false);
+                return false;
         }
     }
 }

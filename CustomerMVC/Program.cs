@@ -1,3 +1,4 @@
+using CustomerMvc.Business.Extensions;
 using CustomerMvc.Business.Middleware;
 using CustomerMvc.Business.Services;
 using CustomerMvc.Domain.Interfaces;
@@ -7,8 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<ICustomerHttpClientService, CustomerHttpClientService>();
+
+//Configure all custom services
+builder.Services.ConfigureServices();
 
 var app = builder.Build();
 
@@ -20,6 +22,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+//Use exception custom middleware
 app.UseExceptionMiddleware();
 
 app.UseHttpsRedirection();
