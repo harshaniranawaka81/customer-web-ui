@@ -3,4 +3,5 @@ ASP .NET Core MVC web application facilitates CRUD operations for customers this
 ASP. NET Core MVC (.NET 6),
 C#,
 Middleware,
+AutoMapper,
 Unit tests using xUnit and Moq
